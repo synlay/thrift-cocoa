@@ -20,6 +20,14 @@
 #import <Foundation/Foundation.h>
 #import "TNSStreamTransport.h"
 
+#define SSL_SOCKET_SETTINGS_DEFAULT [NSDictionary dictionaryWithObjectsAndKeys: \
+(NSString *)kCFStreamSocketSecurityLevelNegotiatedSSL, kCFStreamSSLLevel, \
+kCFBooleanTrue, kCFStreamSSLAllowsExpiredCertificates, \
+kCFBooleanTrue, kCFStreamSSLAllowsExpiredRoots, \
+kCFBooleanTrue, kCFStreamSSLAllowsAnyRoot, \
+kCFBooleanFalse, kCFStreamSSLValidatesCertificateChain, \
+[NSNull null], kCFStreamSSLPeerName, nil]
+
 @interface TSocketClient : TNSStreamTransport 
 #if TARGET_OS_IPHONE || (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)
 <NSStreamDelegate>
@@ -30,6 +38,9 @@
 - (id) initWithHostname: (NSString *) hostname
                    port: (int) port;
 
+- (id) initSSLSocketWithHostname: (NSString *) hostname
+                            port: (int) port
+                     sslSettings: (NSDictionary *) settings;
 @end
 
 
