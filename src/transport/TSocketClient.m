@@ -36,6 +36,8 @@
 
 - (id) initWithHostname: (NSString *) hostname
                    port: (int) port
+                 useSSL: (bool) useSSL
+            sslSettings: (NSDictionary *) settings
 {
 	inputStream = NULL;
 	outputStream = NULL;
@@ -50,13 +52,20 @@
 		[inputStream retain_stub];
 		[inputStream setDelegate:self];
 		[inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-		[inputStream open];
 		
 		outputStream = (bridge_stub NSOutputStream *)writeStream;
 		[outputStream retain_stub];
 		[outputStream setDelegate:self];
 		[outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-		[outputStream open];
+
+        if (useSSL) {
+            [inputStream setProperty:settings forKey:(NSString *)kCFStreamPropertySSLSettings];
+            [outputStream setProperty:settings forKey:(NSString *)kCFStreamPropertySSLSettings];
+        }
+
+        [inputStream open];
+        [outputStream open];
+
         CFRelease(readStream);
         CFRelease(writeStream);
 	}
@@ -64,6 +73,21 @@
 	self = [super initWithInputStream: inputStream outputStream: outputStream];
 	
 	return self;
+}
+
+- (id) initSSLSocketWithHostname: (NSString *) hostname
+                            port: (int) port
+                     sslSettings: (NSDictionary *) settings
+{
+    return [self initWithHostname:hostname port:port useSSL:TRUE
+                      sslSettings:([settings count] == 0) ? SSL_SOCKET_SETTINGS_DEFAULT
+                                 : settings];
+}
+
+- (id) initWithHostname: (NSString *) hostname
+                   port: (int) port
+{
+	return [self initWithHostname:hostname port:port useSSL:FALSE sslSettings:nil];
 }
 
 -(void)dealloc
@@ -79,7 +103,6 @@
     [outputStream release_stub];
     [super dealloc_stub];
 }
-
 
 @end
 
